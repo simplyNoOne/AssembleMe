@@ -1,0 +1,33 @@
+Zaimplementuj program, który będzie obliczał wartość wyrażenia arytmetycznego wskazanego przez użytkownika. Po uruchomieniu program drukuje (wyświetla) dostępne wyrażenia, wczytuje wybór użytkownika, prosi o podanie wartości zmiennych, drukuje (wyświetla) wynik obliczeń i pyta czy kontynuować obliczenia.
+
+Należy przyjąć, że program oblicza wartości wyrażeń postaci:
+
+1.     a=(c-b)/d
+2.     a=(c-d)*b
+3.     a=b*c-2*d
+Na wyjściu program powinien podawać wynik działania oraz pytać czy wykonać kolejne działanie, należy przyjąć, że:
+
+·         0: nie
+
+·         1: tak
+
+Jeśli odpowiedź jest pozytywna, to program powinien ponownie przedstawić wyrażenia, których wartości można obliczyć, wczytać wybór użytkownika oraz wartości zmiennych.
+
+ Przykładowe wywołanie:
+
+1.       Numer wyrażenia, którego wartość należy obliczyć: 2
+
+2.       Podaj wartości zmiennych:
+
+3.      b = 48
+
+4.      c = 15
+
+5.      d = -7
+
+6.       Wartość wyrażenia wynosi: 6
+
+7.       Czy kontynuować?: 0 (nie)
+
+
+Proszę zwrócić uwagę na to, kiedy program zaczyna podawać błędne wyniki. Czym to jest spowodowane? Jak można wykryć taką sytuację i zabezpieczyć się przed nią?

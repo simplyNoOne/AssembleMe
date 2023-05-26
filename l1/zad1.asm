@@ -1,3 +1,9 @@
+
+# $t0 bedzie rejestrem uzywanym do pobierania wyborow uzytkownika
+# $t1 - t3 beda przechowywac 3 zmienne
+# $t5 bedzie rejestrem zawierajacym koncowe wyniki operacji
+# $t9 bedzie przechowywac 0 jesli do wyniku wypisujemy wynik int a 1, jesli float
+
 .data:
 	instruction: .asciiz "Podaj numer wyrazenia, ktore chesz obliczyc: "
 	expression_prompt: .asciiz "Dostepne wyrazenia:"
@@ -18,10 +24,6 @@
 main:
 	
 	jal prompt_the_user
-	
-	li $v0, 4                      # Wypisz prompt dla numeru wyrażenia
-	la $a0, ask_continue
-  	syscall
 	
 	
 prompt_the_user:
@@ -108,12 +110,52 @@ expression1:
 	beq $t3, 0, division_by_zero
 	
 	sub $t4, $t2, $t1
-	div $t5, $t4, $t3
+	#div $t5, $t4, $t3
+	
+	mtc1 $t3, $f3
+	mtc1 $t4, $f4
+	
+	div.s $f5, $f4, $f3
+	
+	
+	li $t9, 1
+	
+	jal return_result
 
 expression2:
 
+	sub $t4, $t2, $t3
+	mul $t5, $t4, $t1
+	
+#	mflo $t6
+#	mfhi $t7
+	
+#	srl $t6, $t6, 16   # Shift the lower 32 bits in $lo right by 16 bits
+#	sll $t7, $t7, 16   # Shift the upper 32 bits in $hi left by 16 bits
+#	or $t5, $t7, $t6		#polacz bity $t6 i $t7 uzywajac or i zapisz w $t5
+	
+	li $t9, 0	#zapamietaj, ze wynik nie jest typu float
+	
+	jal return_result
 
 expression3:
+
+	mul $t4, $t1, $t2
+	
+#	mflo $t6
+#	mfhi $t7
+	
+#	srl $t6, $t6, 16   # Shift the lower 32 bits in $lo right by 16 bits
+#	sll $t7, $t7, 16   # Shift the upper 32 bits in $hi left by 16 bits
+#	or $t4, $t7, $t6		#polacz bity $t6 i $t7 uzywajac or i zapisz w $t5
+	
+	mul $t3, $t3, 2		#pomnoz wartosc d razy 2
+	
+	sub $t5, $t4, $t3	#zapisz wynik odejmowania w $t5
+	
+	li $t9, 0		#uzyj rejestru 9, zeby zapamietac, ze wynik nie jest typu float
+
+	jal return_result
 
 division_by_zero:
 
@@ -125,17 +167,46 @@ division_by_zero:
 	la $a0, newline
 	syscall
 	
+	jal ask_if_continue
 	
-ask_if_continue:
-	li $v0, 4			#zapytaj, czy kontynuowac 
-	la $a0, ask_continue
+return_result:
+	li $v0, 4			#wyswietl etykiete do wyniku
+	la $a0, result1
 	syscall
 	
-	li $v0, 5
+	beq $t9, 1, return_float		#jesli w $t9 jest 1, to znaczy ze wyswietlamy float, inaczej kontynuujemy z intami
+	
+	li $v0, 1			#ustaw wyswietlanie na int
+	move $a0, $t5 			#zapisz wynik z $t5 do wyswietlenia
+	syscall
+	
+	jal ask_if_continue		#przechodzimy do sprawdzenia czy wykonac ponownie
+	
+return_float:
+	li $v0, 2			#ustaw wyswietlanie na float
+	mov.s $f12, $f5			#przenies wynik do rejestru, z ktorego sa wyswietlane floaty
+	syscall
+	
+	jal ask_if_continue
+	
+ask_if_continue:
+
+	li $v0, 4 			#zaznacz, ze wypiszemy ascii
+	la $a0, newline			#zrob nowa linie
+	syscall
+
+	li $v0, 4			#zaznacz, ze wypiszemy ascii 
+	la $a0, ask_continue		#wyswietl pytanie czy kontynuowac
+	syscall
+	
+	li $v0, 5			#pobierz wybor uzytkownika
 	syscall
 	move $t0, $v0   
 	
-	beq $t0, 1, main			# jesli uzytkownik wybierze 1, wroc na poczatek, inaczej nie rob nic
+	beq $t0, 1, main			# jesli uzytkownik wybierze 1, wroc na poczatek, inaczej nie rob nic, program sie konczy
+	
+	
+	
 	
 	
 	
