@@ -15,8 +15,10 @@
 	var_b: .asciiz "b = "
 	var_c: .asciiz "c = "
 	var_d: .asciiz "d = "
+	reminder: .asciiz ", reszta:"
 	result1: .asciiz "Twoj wynik to: "	
 	result2: .asciiz "Nie mozna dzielic przez 0!"
+	no_formula: .asciiz "Nie ma takiego dzialania"
 	ask_continue: .asciiz "Czy kontynuowac? (0. - Nie, 1. - Tak): "
 	
 .text:
@@ -27,31 +29,32 @@ main:
 	
 	
 prompt_the_user:
-	li $v0, 4                      # Wypisz prompt dla numeru wyrażenia
-	la $a0, expression_prompt
-    	syscall
+	li $v0, 4			# Ustaw $v0 na wyświetlanie asciiz
+	la $a0, expression_prompt	# Podaj wartość do wyświetlenia (informacja o dostępnych działaniach)
+    	syscall				# Wyświetl zapisany w rejestrze $a0 tekst na ekran
+    					# Operacje wyświetlania powtarzają się tu często, więc kolejne nie będą opisane 
     	
-    	li $v0, 4                      # Wypisz prompt dla numeru wyrażenia
+    	li $v0, 4			# Zrób nową linię w konsoli
 	la $a0, newline
 	syscall
 	
-	li $v0, 4                     
+	li $v0, 4                     	# Wyświetl działanie 1
 	la $a0, ex1
 	syscall
 	
-	li $v0, 4                      # Wypisz prompt dla numeru wyrażenia
+	li $v0, 4
 	la $a0, newline
 	syscall
 	
-	li $v0, 4                     
+	li $v0, 4 			# Wyświetl działanie 2
 	la $a0, ex2
 	syscall
 	
-	li $v0, 4                      # Wypisz prompt dla numeru wyrażenia
+	li $v0, 4 
 	la $a0, newline
 	syscall
 	
-	li $v0, 4                     
+	li $v0, 4 			# Wyświetl działanie 3
 	la $a0, ex3
 	syscall
 	
@@ -59,107 +62,95 @@ prompt_the_user:
 	la $a0, newline
 	syscall
 	
-	li $v0, 4                     
+	li $v0, 4			# Wyświetl prośbę o podanie numeru działania
 	la $a0, instruction
 	syscall
 	
-	li $v0, 5
-	syscall
-	move $t0, $v0 
+	li $v0, 5			# Przygotuj program do przyjęcia inputu od użytkownika
+	syscall				# Poczekaj na input
+	move $t0, $v0			# Zapisz podany int do rejestru $v0
 	
 	 
-	li $v0, 4			# kaz wpisac zmienne    
+	li $v0, 4			# Poproś o podanie wartości zmiennych 
 	la $a0, prompt_values
 	syscall
 	
-	li $v0, 4			# newline
+	li $v0, 4			
 	la $a0, newline
 	syscall
 	
-	li $v0, 4                     
+	li $v0, 4			# Wyświetl zapytanie o wartość b
 	la $a0, var_b
 	syscall
 	
-	li $v0, 5			 # Wczytaj wartosc b
+	li $v0, 5			# Przygotuj program do pobrania inta z inputu
 	syscall
-	move $t1, $v0   
+	move $t1, $v0			# Zapisz podaną wartość w rejestrze $t1
 	
-	li $v0, 4                     
+	li $v0, 4 			# Wyświetl zapytanie o wartość c
 	la $a0, var_c
 	syscall
 	
-	li $v0, 5			 # Wczytaj wartosc c
+	li $v0, 5			# Przygotuj program do pobrania inta z inputu
 	syscall
-	move $t2, $v0   
+	move $t2, $v0			# Zapisz podaną wartość w rejestrze $t2
 	
-	li $v0, 4                     
+	li $v0, 4			# Wyświetl zapytanie o wartość d
 	la $a0, var_d
 	syscall
 	
-	li $v0, 5			 # Wczytaj wartosc d
+	li $v0, 5			# Przygotuj program do pobrania inta z inputu
 	syscall
-	move $t3, $v0   
+	move $t3, $v0			# Zapisz podaną wartość w rejestrze $t3
 	
-	beq $t0, 1, expression1
-	beq $t0, 2, expression2
+	beq $t0, 1, expression1		# Jeśli działanie (rejestr $t0) równa się 1, przejdź to działania 1
+	beq $t0, 2, expression2		# Analogicznie dla 2 i 3
 	beq $t0, 3, expression3
 	
+	jal no_operation
 	
-expression1:
+expression1:				# Liczenie działania 1 ( a = (c - b)/d )
 	
-	beq $t3, 0, division_by_zero
+	beq $t3, 0, division_by_zero	# Jeśli wartość d (w rejestrze $t3) równa się zero, od razu przewij liczenie i wyświetl informacje
 	
-	sub $t4, $t2, $t1
+	sub $t4, $t2, $t1		# Odejmij $t1 od $t2 i zapisz wynik w $t4
 	#div $t5, $t4, $t3
 	
-	mtc1 $t3, $f3
-	mtc1 $t4, $f4
+	##mtc1 $t3, $f3			# Przepisz wartość $t3 do rejestru $f3 dla floatów, po to aby można było otrzymać wyniki po przecinku
+	#mtc1 $t4, $f4			# Przepisz wartość $t4 do rejestru dla floatów $f4
 	
-	div.s $f5, $f4, $f3
+	#div.s $f5, $f4, $f3		# Wykonaj dzielenie floatów i zapisz wynik w rejestrze $f5
 	
+	div $t5, $t4, $t3
+	li $t9, 1			# Zapamiętaj, że wykonane działanie było na floatach, aby poprawnie wyświetlić wynik
 	
-	li $t9, 1
-	
-	jal return_result
+	jal return_result		# Przejdź do wyświetlania wyniku
 
-expression2:
+expression2:				# Liczenie działania 2 ( a = (c - d)*b )
 
-	sub $t4, $t2, $t3
-	mul $t5, $t4, $t1
+	sub $t4, $t2, $t3		# Odejmij wartość z $t3 od $t2 i zapisz wynik w $t4
+	mul $t5, $t4, $t1		# Pomnóż wartości z $t4 i $t1 i zapisz do $t5
 	
-#	mflo $t6
-#	mfhi $t7
 	
-#	srl $t6, $t6, 16   # Shift the lower 32 bits in $lo right by 16 bits
-#	sll $t7, $t7, 16   # Shift the upper 32 bits in $hi left by 16 bits
-#	or $t5, $t7, $t6		#polacz bity $t6 i $t7 uzywajac or i zapisz w $t5
+	li $t9, 0			#zapamietaj, ze wynik nie jest typu float
 	
-	li $t9, 0	#zapamietaj, ze wynik nie jest typu float
-	
-	jal return_result
+	jal return_result		# Przejdź do wyświetlania wyniku
 
 expression3:
 
-	mul $t4, $t1, $t2
+	mul $t4, $t1, $t2		# Pomnóż $t1 i $t2 i zapisz w $t4
 	
-#	mflo $t6
-#	mfhi $t7
+	mul $t3, $t3, 2			# Pomnóż $t3 razy dwa i zapisz z powrotem w $t3
 	
-#	srl $t6, $t6, 16   # Shift the lower 32 bits in $lo right by 16 bits
-#	sll $t7, $t7, 16   # Shift the upper 32 bits in $hi left by 16 bits
-#	or $t4, $t7, $t6		#polacz bity $t6 i $t7 uzywajac or i zapisz w $t5
+	sub $t5, $t4, $t3		# Odejmij $t3 od $t4 i zapisz w $t5
 	
-	mul $t3, $t3, 2		#pomnoz wartosc d razy 2
-	
-	sub $t5, $t4, $t3	#zapisz wynik odejmowania w $t5
-	
-	li $t9, 0		#uzyj rejestru 9, zeby zapamietac, ze wynik nie jest typu float
+	li $t9, 0			# Użyj rejestru 9, żeby zapamietać, że wynik nie jest typu float
 
-	jal return_result
+	jal return_result		# Przejdź do wyświetlania wyniku
 
 division_by_zero:
 
-	li $v0, 4			#poinformuj, ze nie mozna dzielic przez 0
+	li $v0, 4			#poinformuj, że nie można dzielić przez 0
 	la $a0, result2
 	syscall 
 	
@@ -167,43 +158,71 @@ division_by_zero:
 	la $a0, newline
 	syscall
 	
-	jal ask_if_continue
+	jal ask_if_continue		# Przejdź do pytania o kontynuację
 	
 return_result:
-	li $v0, 4			#wyswietl etykiete do wyniku
+	li $v0, 4			#wyświetl etykietę do wyniku
 	la $a0, result1
 	syscall
 	
-	beq $t9, 1, return_float		#jesli w $t9 jest 1, to znaczy ze wyswietlamy float, inaczej kontynuujemy z intami
+	beq $t9, 1, return_reminder		# Jeśli $t9 ma wartość 1, przejdź do wyświetlenia floata, inaczej kontynuuj
 	
-	li $v0, 1			#ustaw wyswietlanie na int
-	move $a0, $t5 			#zapisz wynik z $t5 do wyswietlenia
+	li $v0, 1			#ustaw wyświetlanie na int
+	move $a0, $t5 			#zapisz wynik z $t5 do wyświetlenia
 	syscall
 	
-	jal ask_if_continue		#przechodzimy do sprawdzenia czy wykonac ponownie
+	jal ask_if_continue		# Przejdź do pytania o kontynuację algorytmu
 	
-return_float:
-	li $v0, 2			#ustaw wyswietlanie na float
-	mov.s $f12, $f5			#przenies wynik do rejestru, z ktorego sa wyswietlane floaty
+return_reminder:
+	li $v0, 1			# Ustaw wyświetlanie na int
+	move $a0, $t5			# Przenies wynik do rejestru, z którego wyświetlane są liczby
+	syscall
+	
+	li $v0, 4			# Ustaw wyświetlanie na znaki
+	la $a0, reminder			# Przenies wynik do rejestru, z którego wyświetlane są liczby
+	syscall
+	
+	mfhi $t7				# pobierz resztę
+	
+	
+	li $v0, 1			# Ustaw wyświetlanie na int
+	move $a0, $t7			# Przenies reszte do rejestru, z którego wyświetlane są liczby
+	syscall
+	
+	jal ask_if_continue		# Przejdź do pytania o kontynuację algorytmu
+	
+ask_if_continue:
+
+	li $v0, 4 			#Nowa linia
+	la $a0 newline
+	syscall
+
+	li $v0, 4			#zaznacz, że będą wypisywane ascii 
+	la $a0, ask_continue		# zapisz do wyświetlenia pytanie, czy kontynuować
+	syscall
+	
+	li $v0, 5			# Przygotuj się do pobrania liczby z klawiatury
+	syscall				# Pobierz wybór użytkownika
+	move $t0, $v0   			# Zapisz wybór użytkownika do rejestru $t0
+	
+	beq $t0, 1, main			# Jeśli wybrano 1, wróć na początek do main
+	beq $t0, $zero, end		# Jeśli wybrano 0, przejdź do end
+	
+	jal ask_if_continue		# Jeśli wybrano coś innego, spytaj ponownie o wybór
+	
+	
+no_operation:
+	li $v0, 4 			#Nowa linia
+	la $a0 newline
+	syscall
+
+	li $v0, 4			#zaznacz, że będą wypisywane ascii 
+	la $a0, no_formula		# poinformuj, ze nie ma takiej formuły
 	syscall
 	
 	jal ask_if_continue
 	
-ask_if_continue:
-
-	li $v0, 4 			#zaznacz, ze wypiszemy ascii
-	la $a0, newline			#zrob nowa linie
-	syscall
-
-	li $v0, 4			#zaznacz, ze wypiszemy ascii 
-	la $a0, ask_continue		#wyswietl pytanie czy kontynuowac
-	syscall
-	
-	li $v0, 5			#pobierz wybor uzytkownika
-	syscall
-	move $t0, $v0   
-	
-	beq $t0, 1, main			# jesli uzytkownik wybierze 1, wroc na poczatek, inaczej nie rob nic, program sie konczy
+end:	#koniec programu
 	
 	
 	
