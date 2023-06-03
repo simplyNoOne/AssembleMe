@@ -225,10 +225,3 @@ no_operation:
 end:	#koniec programu
 	
 	
-	
-	
-	
-	
-	
-    	
-    	

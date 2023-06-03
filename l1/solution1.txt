@@ -1,8 +1,8 @@
+
 # $t0 bedzie rejestrem uzywanym do pobierania wyborow uzytkownika
 # $t1 - t3 beda przechowywac 3 zmienne
 # $t5 bedzie rejestrem zawierajacym koncowe wyniki operacji
 # $t9 bedzie przechowywac 0 jesli do wyniku wypisujemy wynik int a 1, jesli float
-
 
 .data:
 	instruction: .asciiz "Podaj numer wyrazenia, ktore chesz obliczyc: "
@@ -15,8 +15,10 @@
 	var_b: .asciiz "b = "
 	var_c: .asciiz "c = "
 	var_d: .asciiz "d = "
+	reminder: .asciiz ", reszta:"
 	result1: .asciiz "Twoj wynik to: "	
 	result2: .asciiz "Nie mozna dzielic przez 0!"
+	no_formula: .asciiz "Nie ma takiego dzialania"
 	ask_continue: .asciiz "Czy kontynuowac? (0. - Nie, 1. - Tak): "
 	
 .text:
@@ -41,14 +43,14 @@ prompt_the_user:
 	syscall
 	
 	li $v0, 4
-	la $a0, newline			# Zrób nową linię w konsoli
+	la $a0, newline
 	syscall
 	
 	li $v0, 4 			# Wyświetl działanie 2
 	la $a0, ex2
 	syscall
 	
-	li $v0, 4			# Zrób nową linię w konsoli 
+	li $v0, 4 
 	la $a0, newline
 	syscall
 	
@@ -56,7 +58,7 @@ prompt_the_user:
 	la $a0, ex3
 	syscall
 	
-	li $v0, 4			# Zrób nową linię w konsoli
+	li $v0, 4
 	la $a0, newline
 	syscall
 	
@@ -73,7 +75,7 @@ prompt_the_user:
 	la $a0, prompt_values
 	syscall
 	
-	li $v0, 4			# Zrób nową linię w konsoli
+	li $v0, 4			
 	la $a0, newline
 	syscall
 	
@@ -105,21 +107,17 @@ prompt_the_user:
 	beq $t0, 2, expression2		# Analogicznie dla 2 i 3
 	beq $t0, 3, expression3
 	
+	jal no_operation
 	
 expression1:				# Liczenie działania 1 ( a = (c - b)/d )
 	
 	beq $t3, 0, division_by_zero	# Jeśli wartość d (w rejestrze $t3) równa się zero, od razu przewij liczenie i wyświetl informacje
 	
 	sub $t4, $t2, $t1		# Odejmij $t1 od $t2 i zapisz wynik w $t4
-	#div $t5, $t4, $t3
-	
-	mtc1 $t3, $f3			# Przepisz wartość $t3 do rejestru $f3 dla floatów, po to aby można było otrzymać wyniki po przecinku
-	mtc1 $t4, $f4			# Przepisz wartość $t4 do rejestru dla floatów $f4
-	
-	div.s $f5, $f4, $f3		# Wykonaj dzielenie floatów i zapisz wynik w rejestrze $f5
 	
 	
-	li $t9, 1			# Zapamiętaj, że wykonane działanie było na floatach, aby poprawnie wyświetlić wynik
+	div $t5, $t4, $t3		# Podziel $t4 na $t3 i zapisz w $t5
+	li $t9, 1			# Zapamiętaj, że wykonane działanie było na z resztą, aby poprawnie wyświetlić wynik
 	
 	jal return_result		# Przejdź do wyświetlania wyniku
 
@@ -162,7 +160,7 @@ return_result:
 	la $a0, result1
 	syscall
 	
-	beq $t9, 1, return_float	# Jeśli $t9 ma wartość 1, przejdź do wyświetlenia floata, inaczej kontynuuj
+	beq $t9, 1, return_reminder		# Jeśli $t9 ma wartość 1, przejdź do wyświetlenia floata, inaczej kontynuuj
 	
 	li $v0, 1			#ustaw wyświetlanie na int
 	move $a0, $t5 			#zapisz wynik z $t5 do wyświetlenia
@@ -170,9 +168,20 @@ return_result:
 	
 	jal ask_if_continue		# Przejdź do pytania o kontynuację algorytmu
 	
-return_float:
-	li $v0, 2			# Ustaw wyświetlanie na float
-	mov.s $f12, $f5			#przenieś wynik do rejestru, z którego są wyświetlane floaty ($f12)
+return_reminder:
+	li $v0, 1			# Ustaw wyświetlanie na int
+	move $a0, $t5			# Przenies wynik do rejestru, z którego wyświetlane są liczby
+	syscall
+	
+	li $v0, 4			# Ustaw wyświetlanie na znaki
+	la $a0, reminder			# Przenies wynik do rejestru, z którego wyświetlane są liczby
+	syscall
+	
+	mfhi $t7				# pobierz resztę
+	
+	
+	li $v0, 1			# Ustaw wyświetlanie na int
+	move $a0, $t7			# Przenies reszte do rejestru, z którego wyświetlane są liczby
 	syscall
 	
 	jal ask_if_continue		# Przejdź do pytania o kontynuację algorytmu
@@ -189,21 +198,31 @@ ask_if_continue:
 	
 	li $v0, 5			# Przygotuj się do pobrania liczby z klawiatury
 	syscall				# Pobierz wybór użytkownika
-	move $t0, $v0   		# Zapisz wybór użytkownika do rejestru $t0
+	move $t0, $v0   			# Zapisz wybór użytkownika do rejestru $t0
 	
-	beq $t0, 1, main		# Jeśli wybrano 1, wróć na początek do main
+	beq $t0, 1, main			# Jeśli wybrano 1, wróć na początek do main
 	beq $t0, $zero, end		# Jeśli wybrano 0, przejdź do end
 	
 	jal ask_if_continue		# Jeśli wybrano coś innego, spytaj ponownie o wybór
+	
+	
+no_operation:
+	li $v0, 4 			#Nowa linia
+	la $a0 newline
+	syscall
+
+	li $v0, 4			#zaznacz, że będą wypisywane ascii 
+	la $a0, no_formula		# poinformuj, ze nie ma takiej formuły
+	syscall
+	
+	jal ask_if_continue
 	
 end:	#koniec programu
 	
 	
 	
 	
-
-
-
+	
 
 #potencjalne problemy:
 #wyjście poza zakres w mnożeniu  -- w przypadku, gdy przekroczymy wartość którą można zapisać na 32 bitach, program zwróci złe wyniki. Aby temu zapobiec, trzeba złączyć wartość z high i low, 

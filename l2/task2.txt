@@ -1,0 +1,31 @@
+Zadanie 2
+Napisz program, który będzie szyfrował i deszyfrował wiadomość napisaną tekstem
+jawnym w języku polskim (bez polskich znaków diakrytycznych). Do szyfrowania i
+deszyfrowania należy zastosować szyfr przestawieniowy permutacyjny (podstawowe
+informacje na temat szyfru w załączonym pliku). Parametrami wejściowymi są:
+1. Którą operację wykonać: S – szyfrowanie, D – deszyfrowanie
+2. 8 znakowy klucz przekształcenia zawierający cyfry z przedziału od 1 do 8:
+3. Tekst jawny (co najwyżej 50 znaków), jeśli operacją jest szyfrowanie lub
+kryptogram o długości do 50 znaków, jeśli operacją jest deszyfrowanie
+Założenia:
+1. Przed szyfrowaniem tekst jawny musi być znormalizowany, tzn. należy z niego
+usunąć wszystkie spacje i znaki interpunkcyjne.
+2. Tekst jawny i szyfrogram zawierają wyłącznie wielkie litery.
+3. Tekst jawny i szyfrogram nie zawierają cyfr.
+Opis szyfru do zadania 2.
+W szyfrach przestawieniowych z kluczem permutacyjnym zamieniana jest kolejność
+znaków tekstu jawnego przy zastosowaniu stałego okresu d (rozmiar szyfrowanego
+bloku tekstu jawnego). Niech Zd będzie zbiorem liczb naturalnych od 1 do d, zaś f: Zd 
+Zd będzie permutacją na zbiorze Zd. Kluczem szyfru permutacyjnego jest para K = (d, f).
+Kolejne bloki d znaków są szyfrowane przez dokonanie permutacji znaków zgodnie z
+funkcją f. Tekst jawny M=m1 ... md md+1 ... jest szyfrowany jako EK(M)=mf(1) ... mf(d) md+f(1)
+... . W procesie deszyfrowania stosuje się permutację odwrotną.
+Przykład:
+Niech d = 4, zaś f jest permutacją (kluczem) o wartości (2431), tj.
+f(1) = 4, f(2) = 1, f(3) = 3, f(4) = 2.
+Wówczas tekst jawny M = KRYPTOANALIZA (kolorami wyróżniono bloki tekstu
+szyfrowanego) zostanie zaszyfrowany jako: RPYKONATLZIAA.
+Deszyfrowanie: d = 4, klucz – permutacja odwrotna – (4123), tj.
+f(1) = 2, f(2) = 4, f (3) = 3, f(4) = 1
+Szyfrogram: RPYKONATLZIAA zostanie zdeszyfrowany do tekstu jawnego:
+KRYPTOANALIZA
