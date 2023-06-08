@@ -1,0 +1,22 @@
+Napisz program, który realizuje następujące zadanie:
+
+1.       Prosi użytkownika o podanie dowolnego tekstu (zadeklarować dopuszczalną długość)
+
+2.       Wczytuje tekst do bufora
+
+3.       Prosi o podanie drugiego tekstu
+
+4.       Wczytuje tekst do bufora
+
+5.       Porównuje ze sobą teksty znak po znaku zaczynając od ostatnich znaków („0” null pomijamy).
+
+6.       Jeśli znaki są jednakowe, to odkłada na stos znak myślnik "-", jeśli znaki są różne na stos odkładany jest znak „*”; dodatkowo program zlicza jednakowe znaki
+
+7.       Sczytuje znaki ze stosu do bufora wstawiając na jako ostatni znak „0” (dlaczego?)
+
+8.       Drukuje zawartość bufora oraz liczbę jednakowych znaków z odpowiednimi komentarzami.
+
+Zadanie jest za 8 punktów. Na 10 punktów należy program rozszerzyć o dodatkowy element, tj. na koniec aplikacja liczy ile pamięci zaalokowano na stosie.
+
+Dodatkowo, proszę zaproponować sensowne rozwiązanie przypadku, w którym teksty wejściowe mają różną długości
+

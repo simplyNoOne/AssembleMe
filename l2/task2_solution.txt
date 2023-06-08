@@ -3,7 +3,7 @@
 	first_prompt: .asciiz "Wpisz S aby szyfrowac i D aby deszyfrowac: "
 	wrong_choice: .asciiz "Nie istnieje taki wybor, sprobuj ponownie"
 	enter_key: .asciiz "Podaj klucz: "
-	invalid_key: .asciiz "Klucz moze zawierac tylko cyfry od 1 do 8"
+	invalid_key: .asciiz "Klucz moze zawierac tylko permutacje cyfr od 1 do 8"
 	enter_value: .asciiz "Podaj wiadomosc na ktorej wykona sie operacja: "
 	value: .space 51
 	message: .space 50
@@ -237,16 +237,29 @@ get_message:
 message_loop:
     	lb $t1, ($t0)    		#załaduj znak z adresu odpowiadającego $t0
     	beqz $t1, message_normalized   # jeśli doszliśmy do końca wiadomości, wyjdź z pętli
+    	
+    	
+    	slti $t8, $t1, 123
+    	sge $t7, $t1, 'a'
+    	and $t6, $t7, $t8
+    	beq $t6, 1, to_upper
 	
+
     	blt $t1, 'A', remove	# jeśli znak nie jest dużą literą to go usuń
     	bgt $t1, 'Z', remove
     	
+continue:
     	sb $t1, ($t3)		#zapisz znak do ciągu docelowego
 
 
     	addiu $t0, $t0, 1 	 # Zwiększ adresy o 1 aby przejsć do kolejnego elementu
     	addiu $t3, $t3, 1
     	j message_loop            # Wróć do początku pętli 
+    	
+to_upper:
+	sub $t1, $t1, 32
+	j continue
+	
     	
 remove:				# usuń znak przez jego pominięcie
 	addiu $t0, $t0, 1	
