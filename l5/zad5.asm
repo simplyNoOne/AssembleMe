@@ -106,6 +106,9 @@ player_move:
 	li $v0, 5                   # Wczytanie numeru pola od gracza
 	syscall
 	move $t6, $v0               # Numer pola od gracza
+	
+	bgt $t6, 9, player_move
+	blt $t6, 1, player_move
 
 	addiu $t6, $t6, -1	# Indeksowanie planszy od 0
 	mul $t6, $t6, 4		# pomnóż przez 4, aby można było dodać do adresu
@@ -130,12 +133,18 @@ player_move:
 computer_move:
 	move $s7, $ra
 	
+	jal check_row_computer	
+	
+	addiu $t5, $t5, 1	#Zwiększenie licznika zajętych pól
+	
+	jal check_winner 	# Sprawdzenie, czy runda rozstrzygnięta
+	beq $s6, 1,round_end	# jeśli w $s6 jest 1, to runda się zakończyła (jest zwycięzca)
+	beq $t5, 9, round_end	#jeśli wykonano już 9 ruchów, to runda się kończy
+	  
+	jr $s7                  # powrót do rozgrywki
 	
 	
-	
-	
-	
-	
+#sprawdzanie rzędu
 check_row_computer:	
 	li $t2, 0		# zmienna do pętli
 row_loop:
@@ -159,6 +168,7 @@ row_inner_continue:
 	j inner_row_loop
 	
 inner_row_end:
+	abs $t3, $t3
 	bne $t3, 2, row_loop
 	add $t9, $t9, -12	#wroć do adresu pierwszej komórki
 	move $t8, $s3
@@ -186,11 +196,11 @@ comp_sign_row:
 	addu $t3, $t3, -1
 	j row_inner_continue
 
+#sprawdzanie kolumny
 check_col_computer:
-		li $t2, 0		# zmienna do pętli
+	li $t2, 0		# zmienna do pętli
 col_loop:
-	beq $t2, 3, return_from_sub
-	
+	beq $t2, 3, check_diag_computer
 	mul $t9, $t2, 4		#oblicz relatywny adres pierwszej komórki w rzędzie
 	add $t9, $t9, $t0	#oblicz absolutny adres pierwszej komórki
 	addu $t2, $t2, 1		#zwiększ iterator pętli o 1
@@ -209,6 +219,7 @@ col_inner_continue:
 	j inner_col_loop
 	
 inner_col_end:
+	abs $t3, $t3
 	bne $t3, 2, col_loop
 	add $t9, $t9, -36	#wroć do adresu pierwszej komórki
 	move $t8, $s3
@@ -234,48 +245,102 @@ comp_sign_col:
 	addu $t3, $t3, -1
 	j col_inner_continue
 
+#sprawdzanie przekątnej
 check_diag_computer:
-	beq $t2, 16, return_from_sub	# jeśli skończyliśmy sprawdzać, kontynuuj grę
-	li $t3, 16
-	sub $t3, $t3, $t2		# $t3 będzie naszym przemieszczeniem między komórkami
-	
+	li $t2, 0
+diag_loop:
+	beq $t2, 16, random_comp_move	# jeśli skończyliśmy sprawdzać, kontynuuj grę
+	li $t7, 16
+	sub $t7, $t7, $t2		# $t7 będzie naszym przemieszczeniem między komórkami	
 	add $t9, $t2, $t0		#zapisz adres pierwszej komórki w $t6
-	add $t8, $t9, $t3		# oblicz adres drugiej komórki - pierwsza plus przesunięcie
-	
 	addu $t2, $t2, 8
 	
+	li $t8, 0		# wew iterator
+	li $t3, 0		#ustaw sumę zajętych na 0
+inner_diag_loop:
+	beq, $t8, 3, inner_diag_end	
 	lw $t6, ($t9)		#załaduj wartość pierwszej komórki do $t6
+	beq $t6, $s0, player_sign_diag
+	bnez $t6, comp_sign_diag
+	move $s3, $t8
+diag_inner_continue:
+	addu $t9, $t9, $t7		#zwiększ adres o krok
+	addu $t8, $t8, 1 
+	j inner_diag_loop
 	
-	beq $t6, 0, check_diag_loop	#jeśli w pierwszej komórce nic nie ma, sprawdź drugą przekątną
-	lw $t7, ($t8)		#załaduj wartość drugiej komórki do $t7
-	bne $t7, $t6, check_diag_loop	#jeśli nie są takie same, to przejdź do sprawdzenia kolejnej przekątnej
+inner_diag_end:
+	abs $t3, $t3
+	bne $t3, 2, diag_loop
+	#
+	li $t8, 32		#załaduj liczbę, która będzie dzielona
+	div $t8, $t8, $t2	#podziel i uzyskaj krok dwa lub 4, w zależności od iteracji
+	div $t4, $t2, 16		#zadecyduj, czy mnożenie zacznie się od 0 czy od 1
 	
-	add $t8, $t8, $t3		#zapisz absolutny adres trzeciej komórki
+	add $a2, $t4, 3
+	mul $a2, $t7, $a2	#oblicz, o ile trzeba wrócić
+	sub $t9, $t9, $a2	#wroć do adresu pierwszej komórki
+	 
 	
-	lw $t7, ($t8)		#załaduj wartość trzeciej komórki do $t7
-	bne $t7, $t6, check_diag_loop	#jeśli nie są takie same, to przejdź do sprawdzenia kolejnej przekątnej
+	add $s3, $s3, $t4	#zwiększ zapamiętany numer pola o $t4
+	mul $t4, $s3, $t8	#oblicz index pola
+	move $t8, $t4
+	mul $t4, $t4, 4
+	add $t9, $t9, $t4
+	sw $s5, ($t9)		# Ustawienie znaku komputera na planszy
+	move $s4, $s5
 	
-	j end_of_check
+	add $t9, $t8, 1
 	
+	#
+	move $a3, $t9
+	move $t3, $ra
+	jal draw_symbol		# zapisz graficzny znak użytkownika w polu
+	move $ra, $t3
+	j return_from_sub
 	
+		
+player_sign_diag:
+	addu $t3, $t3, 1
+	j diag_inner_continue
 	
+comp_sign_diag:
+	addu $t3, $t3, -1
+	j diag_inner_continue
 	
+random_comp_move:
+	move $t9, $t0		#zapisz adres pierwszego pola
+	li $t7, 16
+	add $t7, $t9, $t7	#adres środkowej komórki
+	lw $t6, ($t7)		#zapisz wartość środkowej komórki
+	bnez $6, random_loop
 	
+	sw $s5, ($t7)		#zapisz znak komputera w polu 5
+	li $a3, 5
+	move $s4, $s5
+	move $t3, $ra
+	jal draw_symbol		# zapisz graficzny znak użytkownika w polu
+	move $ra, $t3
+	j return_from_sub
 	
+random_loop:
+	lw $t2, ($t9)
+	beqz $t2, check_field	#szukaj pierwszego pustego pola
+	add $t9, $t9, 4
+	j random_loop
+		
+check_field:	
+	sw $s5, ($t9)
+	sub $t3, $t9, $t0
+	div $t3, $t3, 4
+	add $t3, $t3, 1
 	
+	move $s4, $s5
+	move $a3, $t3
+	move $t3, $ra
+	jal draw_symbol		# zapisz graficzny znak użytkownika w polu
+	move $ra, $t3
+	j return_from_sub
 	
-	
-	
-	#logic
-	
-	
-	addiu $t5, $t5, 1	#Zwiększenie licznika zajętych pól
-	
-	jal check_winner 	# Sprawdzenie, czy runda rozstrzygnięta
-	beq $s6, 1,round_end	# jeśli w $s6 jest 1, to runda się zakończyła (jest zwycięzca)
-	beq $t5, 9, round_end	#jeśli wykonano już 9 ruchów, to runda się kończy
-	  
-	jr $s7                  # powrót do rozgrywki
 	
 reset_board:
 	la $t3, template_board_layout
